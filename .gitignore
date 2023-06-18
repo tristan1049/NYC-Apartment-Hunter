@@ -2,3 +2,4 @@ Design.txt
 env/
 *.pyc
 filters.yaml
+listings.db

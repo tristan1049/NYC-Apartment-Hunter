@@ -53,5 +53,5 @@ def get_listings(pages=None):
 
     for page in range(1, pages+1):
         yield get_listings_one_page(page)
-        # Sleep for 4-8 seconds to not send too many requests at once
-        time.sleep(round(random.uniform(4, 8), 3))
+        # Sleep for 8-10 seconds to not send too many requests at once
+        time.sleep(round(random.uniform(8, 10), 3))

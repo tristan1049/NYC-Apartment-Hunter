@@ -1,4 +1,8 @@
-import yaml
+from utils.filters_utils import get_filters
+from utils.filters_utils import is_valid_filter
+from utils.filters_utils import validate_baths
+from utils.filters_utils import validate_beds
+from utils.filters_utils import CONFIRM_LIST
 
 # REQUESTS CONSTANTS
 STREETEASY_URL = "https://streeteasy.com/for-rent/nyc/"
@@ -21,42 +25,6 @@ BROOKLYN_CODE = '300'
 QUEENS_CODE ='400'
 NORTH_JERSEY_CODE = '800000'  # StreetEasy is so weird for this
 
-# YAML CONSTANTS
-CONFIRM_LIST = ['yes', 'y']
-BATHS_LIST = [1, 1.5, 2, 2.5, 3, 3.5, 4]
-
-def get_filters():
-    # TODO: Make this compatible with calling program from not root directory
-    # TODO: Check if this file exists first as well
-    with open('filters.yaml', 'r') as file:
-        return yaml.safe_load(file) 
-   
-def validate_baths(baths):
-    if baths:
-        if baths not in BATHS_LIST:
-            if baths < 1:
-                baths = 1
-            elif baths > 4:
-                baths = 4
-            baths = round(baths)
-    return baths
-
-def validate_beds(min_beds, max_beds):
-    if min_beds:
-        if min_beds < 0:
-            min_beds = 0
-        elif min_beds > 4:
-            min_beds = 4
-    if max_beds:
-        if max_beds < 0:
-            max_beds = 0
-        elif max_beds > 4:
-            max_beds = 4
-    if min_beds and max_beds:
-        if min_beds > max_beds:
-            max_beds = min_beds 
-    return min_beds, max_beds
-
 def get_streeteasy_url_with_filters(page_num=1):
     url = STREETEASY_URL
     filters = get_filters()
@@ -68,16 +36,11 @@ def get_streeteasy_url_with_filters(page_num=1):
 
     # Add area tags to url
     areas = []
-    if filters['boroughs']['Manhattan'] != None:
-        areas = [MANHATTAN_CODE] if (filters['boroughs']['Manhattan'].strip().lower()) in CONFIRM_LIST else []
-    if filters['boroughs']['Bronx'] != None:
-        areas = areas + [BRONX_CODE] if filters['boroughs']['Bronx'].strip().lower() in CONFIRM_LIST else []
-    if filters['boroughs']['Brooklyn'] != None:
-        areas = areas + [BROOKLYN_CODE] if filters['boroughs']['Brooklyn'].strip().lower() in CONFIRM_LIST else []
-    if filters['boroughs']['Queens'] != None:
-        areas = areas + [QUEENS_CODE] if filters['boroughs']['Queens'].strip().lower() in CONFIRM_LIST else []
-    if filters['boroughs']['North Jersey'] != None: 
-        areas = areas + [NORTH_JERSEY_CODE] if filters['boroughs']['North Jersey'].strip().lower() in CONFIRM_LIST else []
+    areas += [MANHATTAN_CODE] if is_valid_filter(filters['boroughs']['Manhattan']) else []
+    areas += [BRONX_CODE] if is_valid_filter(filters['boroughs']['Bronx']) else []
+    areas += [BROOKLYN_CODE] if is_valid_filter(filters['boroughs']['Brooklyn']) else []
+    areas += [QUEENS_CODE] if is_valid_filter(filters['boroughs']['Queens']) else []
+    areas += [NORTH_JERSEY_CODE] if is_valid_filter(filters['boroughs']['North Jersey']) else []
     url += 'area:{}%7C'.format(','.join(areas))
 
     # Add bath tag to url
@@ -106,10 +69,13 @@ def get_streeteasy_url_with_filters(page_num=1):
     if len(amenities) > 0:
         url += 'amenities:{}%7C'.format(','.join(amenities))
 
-    # Add move in date
+    # Add move in date to url
     if filters['move_in']['before'] != None:
         url += 'available:{}%7C'.format(filters['move_in']['before'])
     elif filters['move_in']['after'] != None:
         url += 'available_after:{}%7C'.format(filters['move_in']['after'])
+
+    # Add page number to url
+    url += '?page={}'.format(page_num)
 
     return url
