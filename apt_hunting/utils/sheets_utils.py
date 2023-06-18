@@ -6,7 +6,8 @@ TOKENS_FILE = 'token.json'
 SCOPES = [
 'https://www.googleapis.com/auth/spreadsheets'
 ]
-SHEET_HEADERS = [["Address", 
+SHEET_HEADERS = [['Address',
+                  'Commute',
                  'Price', 
                  'District', 
                  'Housing', 

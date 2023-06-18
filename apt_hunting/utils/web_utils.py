@@ -1,3 +1,7 @@
+import json
+import urllib
+from datetime import datetime
+
 from utils.filters_utils import get_filters
 from utils.filters_utils import is_valid_filter
 from utils.filters_utils import validate_baths
@@ -9,6 +13,7 @@ STREETEASY_URL = "https://streeteasy.com/for-rent/nyc/"
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
     }
+API_FILE = 'api.json'
 
 # HTML CONSTANTS
 LISTING_CLASS = 'searchCardList--listItem'
@@ -77,5 +82,37 @@ def get_streeteasy_url_with_filters(page_num=1):
 
     # Add page number to url
     url += '?page={}'.format(page_num)
+
+    return url
+
+def get_commute_time_url(address):
+    filters = get_filters()
+    dest = filters['commute']['address']
+    time_limit = filters['commute']['time_limit']
+    year = filters['commute']['year']
+    month = filters['commute']['month']
+    day = filters['commute']['day']
+    hour = filters['commute']['hour']
+    minute = filters['commute']['minute']
+
+    if dest == None or time_limit == None:
+        return None
+    # Set commute_time in Epoch standard for API
+    if None in [year, month, day, hour]:
+        commute_time = datetime.now().strftime('%s')
+    elif minute == None:
+        commute_time = datetime(year, month, day, hour).strftime('%s')
+    else:
+        commute_time = datetime(year, month, day, hour, minute).strftime('%s')
+    
+    with open(API_FILE, 'r') as file:
+        api_key = json.load(file)
+        api_key = api_key['apikey']
+
+    url = 'https://maps.googleapis.com/maps/api/distancematrix/json'
+    url += '?origins={}'.format(urllib.parse.quote(address))
+    url += '&destinations={}'.format(urllib.parse.quote(dest))
+    url += '&departure_time={}'.format(urllib.parse.quote(str(commute_time)))
+    url += '&key={}'.format(api_key)
 
     return url

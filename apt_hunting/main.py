@@ -21,8 +21,9 @@ def main():
     for listings in get_listings():
         # Insert the listings into the db
         rows_inserted = insert_listings_to_db(conn, listings)
+        print("Inserted {} rows into the spreadsheet".format(len(rows_inserted)))
+        # Insert the unique listings into a spreadsheet
         append_sheet(creds, sheet_id, rows_inserted)
-        # print(len(select_all_listings(conn)))
 
     # Once finished, close the connection
     close_conn(conn)

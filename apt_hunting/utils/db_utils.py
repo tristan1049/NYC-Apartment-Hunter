@@ -5,20 +5,24 @@ from utils.filters_utils import is_valid_filter
 
 # DB METADATA CONSTANTS
 LISTINGS_DB = 'listings'
-LISTINGS_DB_COLUMNS = ['address', 
-              'price', 
-              'district', 
-              'housing', 
-              'beds', 
-              'baths', 
-              'pets', 
-              'in_unit_laundry', 
-              'in_building_laundry', 
-              'sq_ft', 
-              'last_updated', 
-              'link']
+LISTINGS_DB_COLUMNS = [
+    'address', 
+    'commute',         
+    'price',
+    'district', 
+    'housing', 
+    'beds', 
+    'baths', 
+    'pets', 
+    'in_unit_laundry', 
+    'in_building_laundry', 
+    'sq_ft', 
+    'last_updated', 
+    'link'
+]
 LISTING_DICT = {
     'address': None, 
+    'commute': None,
     'price': None, 
     'district': None, 
     'housing': None, 
@@ -35,6 +39,7 @@ LISTING_DICT = {
 # DB QUERIES
 CREATE_TABLES_QUERY = """CREATE TABLE IF NOT EXISTS listings (
     address text PRIMARY KEY, 
+    commute text,
     price text, 
     district text, 
     housing text , 
@@ -62,10 +67,11 @@ def map_listings_to_dicts(listings):
         listing_dict['housing'] = listing[1]
         listing_dict['district'] = listing[2]
         listing_dict['address'] = listing[3]
-        listing_dict['price'] = listing[4]
-        listing_dict['beds'] = listing[5]
-        listing_dict['baths'] = listing[6]
-        listing_dict['sq_ft'] = listing[7]
+        listing_dict['commute'] = listing[4]
+        listing_dict['price'] = listing[5]
+        listing_dict['beds'] = listing[6]
+        listing_dict['baths'] = listing[7]
+        listing_dict['sq_ft'] = listing[8]
         listing_dict['last_updated'] = str(date.today())
         listing_dict['pets'] = 'yes' if is_valid_filter(filters['pets']) else None
         listing_dict['in_unit_laundry'] = 'yes' if is_valid_filter(filters['laundry']['in_unit']) else None
@@ -79,6 +85,7 @@ def listings_dicts_to_tuples(listings):
     for listing in listings:
         listings_tuples.append((
            listing['address'],
+           listing['commute'],
            listing['price'],
            listing['district'],
            listing['housing'],

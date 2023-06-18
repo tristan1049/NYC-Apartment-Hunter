@@ -5,3 +5,4 @@ filters.yaml
 listings.db
 credentials.json
 token.json
+api.json

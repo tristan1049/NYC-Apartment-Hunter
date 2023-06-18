@@ -40,3 +40,7 @@ def validate_beds(min_beds, max_beds):
         if min_beds > max_beds:
             max_beds = min_beds 
     return min_beds, max_beds
+
+def get_commute_limit():
+    filters = get_filters()
+    return int(filters['commute']['time_limit'])

@@ -2,8 +2,11 @@ import requests
 import time
 import random
 from bs4 import BeautifulSoup
+from datetime import datetime
 
+from utils.filters_utils import get_commute_limit
 from utils.web_utils import get_streeteasy_url_with_filters
+from utils.web_utils import get_commute_time_url
 from utils.web_utils import HEADERS
 from utils.web_utils import LISTING_CLASS
 from utils.web_utils import BUILDING_CLASS
@@ -11,6 +14,15 @@ from utils.web_utils import PRICE_CLASS
 from utils.web_utils import BEDS_CLASS
 from utils.web_utils import BATHS_CLASS
 from utils.web_utils import SQ_FT_CLASS
+
+def get_commute_time(address):
+    url = get_commute_time_url(address)
+    response = requests.get(url)
+    if response.status_code != 200:
+        return None
+    if response.json()['rows'][0]['elements'][0]['status'] == 'NOT_FOUND':
+        return None
+    return response.json()['rows'][0]['elements'][0]['duration']['text']
 
 def get_listings_one_page(page_num=1):
     rv = []
@@ -24,6 +36,7 @@ def get_listings_one_page(page_num=1):
         building_type = listing.find_all('p', class_=BUILDING_CLASS)[-1]
         housing, district = building_type.string.strip().split(' in ')
         address = listing.find('address').a.string.strip()
+        commute = get_commute_time(address)
         price = listing.find('span', class_=PRICE_CLASS).string.strip()
         beds = listing.find('span', class_=BEDS_CLASS).next_sibling.next_sibling.string.strip()
         baths = listing.find('span', class_=BATHS_CLASS).next_sibling.next_sibling.string.strip()
@@ -31,7 +44,11 @@ def get_listings_one_page(page_num=1):
         if (sq_ft):
             sq_ft = sq_ft.next_sibling.next_sibling.contents[0].strip()
 
-        rv.append([href, housing, district, address, price, beds, baths, sq_ft])
+        if commute:
+            if int(commute.split(' mins')[0]) < get_commute_limit():
+                rv.append([href, housing, district, address, commute, price, beds, baths, sq_ft])
+        else:
+            rv.append([href, housing, district, address, commute, price, beds, baths, sq_ft])
 
     return rv
 
