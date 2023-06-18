@@ -3,7 +3,7 @@ import time
 import random
 from bs4 import BeautifulSoup
 
-from utils.web_utils import get_streeteasy_url
+from utils.web_utils import get_streeteasy_url_with_filters
 from utils.web_utils import HEADERS
 from utils.web_utils import LISTING_CLASS
 from utils.web_utils import BUILDING_CLASS
@@ -14,7 +14,7 @@ from utils.web_utils import SQ_FT_CLASS
 
 def get_listings_one_page(page_num=1):
     rv = []
-    response = requests.get(get_streeteasy_url(page_num), headers=HEADERS)
+    response = requests.get(get_streeteasy_url_with_filters(page_num), headers=HEADERS)
     soup = BeautifulSoup(response.text, 'html.parser')
 
     listings = soup.find_all(class_=LISTING_CLASS) 
@@ -38,7 +38,7 @@ def get_listings_one_page(page_num=1):
 # Generator that gets newest listings data for n=pages pages. If None, gets data from all pages
 def get_listings(pages=None):
     # Get max number of pages
-    first_page = requests.get(get_streeteasy_url(1), headers=HEADERS) 
+    first_page = requests.get(get_streeteasy_url_with_filters(1), headers=HEADERS) 
     soup = BeautifulSoup(first_page.text, 'html.parser')
     max_pages = int(soup.find_all('li', class_='page')[-1].a.string.strip())
     time.sleep(2)
