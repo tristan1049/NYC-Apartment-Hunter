@@ -18,7 +18,15 @@ Then, run the `requirements.txt` file to gather necessary imports:
 $ pip install -r requirements.txt
 ```
 
-Now you should be good to go! To get data for one page of listings, run this command (More features in the future):
+Now that your environment is set, create a new file in the root directory called `filters.yaml`, that is a copy of `filters-template.yaml`.
+
+```
+$ cp filters-template.yaml filters.yaml
+```
+
+ Fill out the `filters.yaml` file with your desired filter settings, to only see listings that match what you're looking for!
+
+Now you should be good to go! To get data for all listings with your filters, run this command (More features in the future):
 ```
 $ python3 apt_hunting/main.py
 ```

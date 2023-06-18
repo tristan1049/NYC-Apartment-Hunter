@@ -27,6 +27,7 @@ BATHS_LIST = [1, 1.5, 2, 2.5, 3, 3.5, 4]
 
 def get_filters():
     # TODO: Make this compatible with calling program from not root directory
+    # TODO: Check if this file exists first as well
     with open('filters.yaml', 'r') as file:
         return yaml.safe_load(file) 
    
