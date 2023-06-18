@@ -66,7 +66,7 @@ def map_listings_to_dicts(listings):
         listing_dict['beds'] = listing[5]
         listing_dict['baths'] = listing[6]
         listing_dict['sq_ft'] = listing[7]
-        listing_dict['last_updated'] = date.today()
+        listing_dict['last_updated'] = str(date.today())
         listing_dict['pets'] = 'yes' if is_valid_filter(filters['pets']) else None
         listing_dict['in_unit_laundry'] = 'yes' if is_valid_filter(filters['laundry']['in_unit']) else None
         listing_dict['in_building_laundry'] = 'yes' if is_valid_filter(filters['laundry']['in_building']) else None

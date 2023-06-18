@@ -3,3 +3,5 @@ env/
 *.pyc
 filters.yaml
 listings.db
+credentials.json
+token.json

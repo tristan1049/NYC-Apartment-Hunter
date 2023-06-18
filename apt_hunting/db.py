@@ -20,6 +20,7 @@ def insert_many_listings(conn, data):
     cursor = conn.cursor()
     cursor.executemany(INSERT_MANY_LISTINGS_QUERY, data)
     conn.commit()
+    return cursor.rowcount
 
 def select_all_listings(conn):
     cursor = conn.cursor()
@@ -31,7 +32,7 @@ def insert_listings_to_db(conn, listings):
     listings_dicts = map_listings_to_dicts(listings)
     listings_tuples = listings_dicts_to_tuples(listings_dicts)
     insert_many_listings(conn, listings_tuples)
-
+    return listings_tuples
 
 if __name__ == '__main__':
     get_conn()
