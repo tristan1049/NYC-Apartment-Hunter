@@ -58,6 +58,8 @@ SELECT_ALL_LISTINGS_QUERY = "SELECT * FROM {}".format(LISTINGS_DB)
 
 def get_listings_with_address_query(address):
     return "SELECT address FROM {} WHERE address = '{}'".format(LISTINGS_DB, address)
+def get_commute_with_address_query(address):
+    return "SELECT commute FROM {} WHERE address = '{}'".format(LISTINGS_DB, address)
 
 # Take a list of listings and return a list of dicts of listings mapping DB columns to values
 # TODO: Have listings already as dicts in web?

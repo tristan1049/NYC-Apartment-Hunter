@@ -5,7 +5,6 @@ from db import insert_listings_to_db
 from db import select_all_listings
 from web import get_listings
 from sheets import create_token
-from sheets import build_sheet
 from sheets import build_sheet_url
 from sheets import insert_sheet
 from sheets import get_sheet_id

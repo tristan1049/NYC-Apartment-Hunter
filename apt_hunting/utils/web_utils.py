@@ -14,6 +14,8 @@ HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
     }
 API_FILE = 'api.json'
+NEW_YORK_SUFFIX = 'New York NY'
+COMMUTE_LIMIT_EXCEEDED = 'Commute limit exceeded'
 
 # HTML CONSTANTS
 LISTING_CLASS = 'searchCardList--listItem'
@@ -85,9 +87,10 @@ def get_streeteasy_url_with_filters(page_num=1):
 
     return url
 
-def get_commute_time_url(address):
+def get_commute_time_url(address, address_suffix=None):
     filters = get_filters()
     dest = filters['commute']['address']
+    mode = filters['commute']['mode_transportation']
     time_limit = filters['commute']['time_limit']
     year = filters['commute']['year']
     month = filters['commute']['month']
@@ -97,6 +100,8 @@ def get_commute_time_url(address):
 
     if dest == None or time_limit == None:
         return None
+    if address_suffix != None:
+        address += ' ' + address_suffix
     # Set commute_time in Epoch standard for API
     if None in [year, month, day, hour]:
         commute_time = datetime.now().strftime('%s')
@@ -113,6 +118,7 @@ def get_commute_time_url(address):
     url += '?origins={}'.format(urllib.parse.quote(address))
     url += '&destinations={}'.format(urllib.parse.quote(dest))
     url += '&departure_time={}'.format(urllib.parse.quote(str(commute_time)))
+    url += '&mode={}'.format(urllib.parse.quote(mode))
     url += '&key={}'.format(api_key)
 
     return url

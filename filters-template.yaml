@@ -37,3 +37,16 @@ pets: 'yes'
 move_in:
   before:
   after: '20230801'
+
+# Put in an address to also filter by max commute time to work (in minutes)
+# mode_transportation can be either 'transit', 'driving', 'walking', or 'bicycling'. Defaults to 'driving'
+commute:
+  address: '242 W 41st St, New York, NY 10036'
+  mode_transportation: 'transit'
+  time_limit: 45
+  # Use these filters to set the time for commuting
+  year: 2023
+  month: 8
+  day: 14
+  hour: 9
+  minute: 0

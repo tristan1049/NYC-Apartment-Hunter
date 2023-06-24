@@ -14,18 +14,21 @@ from utils.web_utils import PRICE_CLASS
 from utils.web_utils import BEDS_CLASS
 from utils.web_utils import BATHS_CLASS
 from utils.web_utils import SQ_FT_CLASS
+from utils.web_utils import NEW_YORK_SUFFIX
+from utils.web_utils import COMMUTE_LIMIT_EXCEEDED
 from db import select_listings_with_address
+from db import select_commute_with_address
 
 def get_commute_time_with_filter(address):
-    url = get_commute_time_url(address)
+    url = get_commute_time_url(address, NEW_YORK_SUFFIX)
     response = requests.get(url)
     if response.status_code != 200:
         return None
     if response.json()['rows'][0]['elements'][0]['status'] == 'NOT_FOUND':
         return None
 
-    response_commute = response.json()['rows'][0]['elements'][0]['duration']['text'] 
     try:
+        response_commute = response.json()['rows'][0]['elements'][0]['duration']['text'] 
         hour_split = response_commute.split(' hours ')
         if len(hour_split) > 1:
             hours = int(hour_split[0])
@@ -36,7 +39,10 @@ def get_commute_time_with_filter(address):
 
         if commute <= get_commute_limit():
             return "{} mins".format(commute)
+        return COMMUTE_LIMIT_EXCEEDED
     except:
+        print("Could not find address: " + address)
+        print(response.json())
         return None
 
 def get_listings_one_page(conn, page_num=1):
@@ -47,13 +53,17 @@ def get_listings_one_page(conn, page_num=1):
     listings = soup.find_all(class_=LISTING_CLASS) 
     for listing in listings:
         address = listing.find('address').a.string.strip()
-        # If address not in DB already, extract record info
-        if select_listings_with_address(conn, address) == None:
+        # If address not in DB already, extract commute info
+        if select_listings_with_address(conn, address) != None:
+            commute = select_commute_with_address(conn, address)
+        else:
+            commute = get_commute_time_with_filter(address.split(" #")[0])
+
+        if commute != COMMUTE_LIMIT_EXCEEDED:        
             href = listing.a.get('href')
             # Need to use find all as sometimes there are multiple lines, but only the last one has the building information
             building_type = listing.find_all('p', class_=BUILDING_CLASS)[-1]
             housing, district = building_type.string.strip().split(' in ')
-            commute = get_commute_time_with_filter(address)
             price = listing.find('span', class_=PRICE_CLASS).string.strip()
             beds = listing.find('span', class_=BEDS_CLASS).next_sibling.next_sibling.string.strip()
             baths = listing.find('span', class_=BATHS_CLASS).next_sibling.next_sibling.string.strip()
@@ -84,3 +94,11 @@ def get_listings(conn, pages=None):
         yield get_listings_one_page(conn, page)
         # Sleep for 8-10 seconds to not send too many requests at once
         time.sleep(round(random.uniform(8, 10), 3))
+
+if __name__ == '__main__':
+    # fails
+    url = get_commute_time_url("161 Meserole Street New York NY")
+    # url = get_commute_time_url("1709 East Third Street New York NY")
+    print(url) 
+    response = requests.get(url)
+    print(response.json())
