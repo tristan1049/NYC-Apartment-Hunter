@@ -2,7 +2,7 @@ import os.path
 
 CREDENTIALS_FILE = 'credentials.json'
 TOKENS_FILE = 'token.json'
-
+SHEET_ID_FILE = "sheet_id.json"
 SCOPES = [
 'https://www.googleapis.com/auth/spreadsheets'
 ]

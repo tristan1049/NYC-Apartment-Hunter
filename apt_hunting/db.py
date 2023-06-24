@@ -28,11 +28,10 @@ def select_all_listings(conn):
     return result.fetchall()
 
 def insert_listings_to_db(conn, listings):
-    create_tables(conn)
     listings_dicts = map_listings_to_dicts(listings)
     listings_tuples = listings_dicts_to_tuples(listings_dicts)
-    insert_many_listings(conn, listings_tuples)
-    return listings_tuples
+    rows_inserted = insert_many_listings(conn, listings_tuples)
+    return rows_inserted
 
 if __name__ == '__main__':
     get_conn()

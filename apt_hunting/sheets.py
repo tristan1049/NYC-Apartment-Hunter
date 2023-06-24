@@ -1,4 +1,5 @@
 import os
+import json
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.auth.transport.requests import Request
@@ -9,6 +10,7 @@ from utils.sheets_utils import SCOPES
 from utils.sheets_utils import CREDENTIALS_FILE
 from utils.sheets_utils import TOKENS_FILE
 from utils.sheets_utils import SHEET_HEADERS
+from utils.sheets_utils import SHEET_ID_FILE
 
 def create_token():
     creds = None
@@ -29,6 +31,15 @@ def create_token():
             token.write(creds.to_json())
     return creds
 
+def get_sheet_id(creds):
+    if os.path.exists(SHEET_ID_FILE):
+        with open(SHEET_ID_FILE, 'r') as file:
+            data = json.load(file)
+            if data:
+                return data['sheet_id']
+
+    return build_sheet(creds, "NYC Apartments")
+
 def append_sheet(creds, sheet_id, listings):
     service = build('sheets', 'v4', credentials=creds)
     body = {
@@ -41,6 +52,24 @@ def append_sheet(creds, sheet_id, listings):
                                                      body=body)
     response = request.execute()
     return response
+
+def insert_sheet(creds, sheet_id, listings):
+    service = build('sheets', 'v4', credentials=creds)
+    body = {
+        "majorDimension": "ROWS",
+        "values": listings
+    }
+    request = service.spreadsheets().values().update(spreadsheetId=sheet_id,
+                                                    range="Sheet1!A2:M",
+                                                    valueInputOption="USER_ENTERED",
+                                                    body=body)
+    response = request.execute()
+    return response
+
+def write_sheet_id_json(sheet_id):
+    with open(SHEET_ID_FILE, 'w') as file:
+        file.write(json.dumps({"sheet_id": sheet_id}))
+    return True
 
 # Builds a sheet and return the ID
 def build_sheet(creds, title):
@@ -55,6 +84,7 @@ def build_sheet(creds, title):
                                                     fields='spreadsheetId') \
             .execute()
         sheet_id = spreadsheet.get('spreadsheetId')
+        write_sheet_id_json(sheet_id)
 
         # Add headers to sheet
         append_sheet(creds, sheet_id, SHEET_HEADERS) 

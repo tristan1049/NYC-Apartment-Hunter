@@ -15,14 +15,28 @@ from utils.web_utils import BEDS_CLASS
 from utils.web_utils import BATHS_CLASS
 from utils.web_utils import SQ_FT_CLASS
 
-def get_commute_time(address):
+def get_commute_time_with_filter(address):
     url = get_commute_time_url(address)
     response = requests.get(url)
     if response.status_code != 200:
         return None
     if response.json()['rows'][0]['elements'][0]['status'] == 'NOT_FOUND':
         return None
-    return response.json()['rows'][0]['elements'][0]['duration']['text']
+
+    response_commute = response.json()['rows'][0]['elements'][0]['duration']['text'] 
+    try:
+        hour_split = response_commute.split(' hours ')
+        if len(hour_split) > 1:
+            hours = int(hour_split[0])
+            mins = int(hour_split[1].split(' mins')[0])
+            commute = 60 * hours + mins
+        else:
+            commute = int(hour_split[0].split(' mins')[0])
+
+        if commute <= get_commute_limit():
+            return "{} mins".format(commute)
+    except:
+        return None
 
 def get_listings_one_page(page_num=1):
     rv = []
@@ -36,7 +50,7 @@ def get_listings_one_page(page_num=1):
         building_type = listing.find_all('p', class_=BUILDING_CLASS)[-1]
         housing, district = building_type.string.strip().split(' in ')
         address = listing.find('address').a.string.strip()
-        commute = get_commute_time(address)
+        commute = get_commute_time_with_filter(address)
         price = listing.find('span', class_=PRICE_CLASS).string.strip()
         beds = listing.find('span', class_=BEDS_CLASS).next_sibling.next_sibling.string.strip()
         baths = listing.find('span', class_=BATHS_CLASS).next_sibling.next_sibling.string.strip()
@@ -44,12 +58,7 @@ def get_listings_one_page(page_num=1):
         if (sq_ft):
             sq_ft = sq_ft.next_sibling.next_sibling.contents[0].strip()
 
-        if commute:
-            if int(commute.split(' mins')[0]) < get_commute_limit():
-                rv.append([href, housing, district, address, commute, price, beds, baths, sq_ft])
-        else:
-            rv.append([href, housing, district, address, commute, price, beds, baths, sq_ft])
-
+        rv.append([href, housing, district, address, commute, price, beds, baths, sq_ft])
     return rv
 
 # Generator that gets newest listings data for n=pages pages. If None, gets data from all pages
