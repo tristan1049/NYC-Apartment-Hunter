@@ -52,9 +52,12 @@ CREATE_TABLES_QUERY = """CREATE TABLE IF NOT EXISTS listings (
     last_updated text, 
     link text
 )"""
-INSERT_MANY_LISTINGS_QUERY = 'INSERT INTO {} VALUES({}) ON CONFLICT(address) DO UPDATE SET last_updated=excluded.last_updated'.format(
+INSERT_MANY_LISTINGS_QUERY = "INSERT INTO {} VALUES({}) ON CONFLICT(address) DO UPDATE SET last_updated=excluded.last_updated".format(
     LISTINGS_DB, ','.join(['?' for i in range(len(LISTINGS_DB_COLUMNS))]))
 SELECT_ALL_LISTINGS_QUERY = "SELECT * FROM {}".format(LISTINGS_DB)
+
+def get_listings_with_address_query(address):
+    return "SELECT address FROM {} WHERE address = '{}'".format(LISTINGS_DB, address)
 
 # Take a list of listings and return a list of dicts of listings mapping DB columns to values
 # TODO: Have listings already as dicts in web?

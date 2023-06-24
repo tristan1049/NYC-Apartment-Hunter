@@ -22,7 +22,7 @@ def main():
     print("NYC Apartment Findings Spreadsheet: \n{}".format(sheet_url))
 
     # Receive each set of listings from generator as they come
-    for listings in get_listings():
+    for listings in get_listings(conn):
         # Insert the listings into the db
         rows_inserted = insert_listings_to_db(conn, listings)
         all_listings = select_all_listings(conn)

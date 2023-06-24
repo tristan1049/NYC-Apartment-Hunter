@@ -14,6 +14,7 @@ from utils.web_utils import PRICE_CLASS
 from utils.web_utils import BEDS_CLASS
 from utils.web_utils import BATHS_CLASS
 from utils.web_utils import SQ_FT_CLASS
+from db import select_listings_with_address
 
 def get_commute_time_with_filter(address):
     url = get_commute_time_url(address)
@@ -38,31 +39,33 @@ def get_commute_time_with_filter(address):
     except:
         return None
 
-def get_listings_one_page(page_num=1):
+def get_listings_one_page(conn, page_num=1):
     rv = []
     response = requests.get(get_streeteasy_url_with_filters(page_num), headers=HEADERS)
     soup = BeautifulSoup(response.text, 'html.parser')
 
     listings = soup.find_all(class_=LISTING_CLASS) 
     for listing in listings:
-        href = listing.a.get('href')
-        # Need to use find all as sometimes there are multiple lines, but only the last one has the building information
-        building_type = listing.find_all('p', class_=BUILDING_CLASS)[-1]
-        housing, district = building_type.string.strip().split(' in ')
         address = listing.find('address').a.string.strip()
-        commute = get_commute_time_with_filter(address)
-        price = listing.find('span', class_=PRICE_CLASS).string.strip()
-        beds = listing.find('span', class_=BEDS_CLASS).next_sibling.next_sibling.string.strip()
-        baths = listing.find('span', class_=BATHS_CLASS).next_sibling.next_sibling.string.strip()
-        sq_ft = listing.find('span', class_=SQ_FT_CLASS)
-        if (sq_ft):
-            sq_ft = sq_ft.next_sibling.next_sibling.contents[0].strip()
+        # If address not in DB already, extract record info
+        if select_listings_with_address(conn, address) == None:
+            href = listing.a.get('href')
+            # Need to use find all as sometimes there are multiple lines, but only the last one has the building information
+            building_type = listing.find_all('p', class_=BUILDING_CLASS)[-1]
+            housing, district = building_type.string.strip().split(' in ')
+            commute = get_commute_time_with_filter(address)
+            price = listing.find('span', class_=PRICE_CLASS).string.strip()
+            beds = listing.find('span', class_=BEDS_CLASS).next_sibling.next_sibling.string.strip()
+            baths = listing.find('span', class_=BATHS_CLASS).next_sibling.next_sibling.string.strip()
+            sq_ft = listing.find('span', class_=SQ_FT_CLASS)
+            if (sq_ft):
+                sq_ft = sq_ft.next_sibling.next_sibling.contents[0].strip()
 
-        rv.append([href, housing, district, address, commute, price, beds, baths, sq_ft])
+            rv.append([href, housing, district, address, commute, price, beds, baths, sq_ft])
     return rv
 
 # Generator that gets newest listings data for n=pages pages. If None, gets data from all pages
-def get_listings(pages=None):
+def get_listings(conn, pages=None):
     # Get max number of pages
     first_page = requests.get(get_streeteasy_url_with_filters(1), headers=HEADERS) 
     soup = BeautifulSoup(first_page.text, 'html.parser')
@@ -78,6 +81,6 @@ def get_listings(pages=None):
         pages = max_pages
 
     for page in range(1, pages+1):
-        yield get_listings_one_page(page)
+        yield get_listings_one_page(conn, page)
         # Sleep for 8-10 seconds to not send too many requests at once
         time.sleep(round(random.uniform(8, 10), 3))
