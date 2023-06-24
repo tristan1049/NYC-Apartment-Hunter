@@ -60,7 +60,7 @@ def insert_sheet(creds, sheet_id, listings):
         "values": listings
     }
     request = service.spreadsheets().values().update(spreadsheetId=sheet_id,
-                                                    range="Sheet1!A2:M",
+                                                    range="Sheet1!A2:P",
                                                     valueInputOption="USER_ENTERED",
                                                     body=body)
     response = request.execute()

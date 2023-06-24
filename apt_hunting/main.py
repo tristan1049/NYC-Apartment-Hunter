@@ -2,7 +2,7 @@ from db import get_conn
 from db import close_conn
 from db import create_tables
 from db import insert_listings_to_db
-from db import select_all_listings
+from db import select_all_listings_with_filters
 from web import get_listings
 from sheets import create_token
 from sheets import build_sheet_url
@@ -24,7 +24,7 @@ def main():
     for listings in get_listings(conn):
         # Insert the listings into the db
         rows_inserted = insert_listings_to_db(conn, listings)
-        all_listings = select_all_listings(conn)
+        all_listings = select_all_listings_with_filters(conn)
         print("Inserted {} listings".format(rows_inserted))
 
         # Insert the unique listings into a spreadsheet

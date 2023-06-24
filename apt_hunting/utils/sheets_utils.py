@@ -7,15 +7,17 @@ SCOPES = [
 'https://www.googleapis.com/auth/spreadsheets'
 ]
 SHEET_HEADERS = [['Address',
+                  'Dest'
                   'Commute',
-                 'Price', 
-                 'District', 
-                 'Housing', 
-                 'Beds', 
-                 'Baths', 
-                 'Pets', 
-                 'In Unit Laundry',
-                 'In Building Laundry',
-                 'Sq. ft',
-                 'Last Updated',
-                 'Link']]
+                  'Mode',
+                  'Price', 
+                  'District', 
+                  'Housing', 
+                  'Beds', 
+                  'Baths', 
+                  'Pets', 
+                  'In Unit Laundry',
+                  'In Building Laundry',
+                  'Sq. ft',
+                  'Last Updated',
+                  'Link']]

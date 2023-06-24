@@ -5,9 +5,9 @@ from utils.filters_utils import is_valid_filter
 
 # DB METADATA CONSTANTS
 LISTINGS_DB = 'listings'
+COMMUTES_DB = 'commutes'
 LISTINGS_DB_COLUMNS = [
-    'address', 
-    'commute',         
+    'address',       
     'price',
     'district', 
     'housing', 
@@ -20,26 +20,33 @@ LISTINGS_DB_COLUMNS = [
     'last_updated', 
     'link'
 ]
-LISTING_DICT = {
-    'address': None, 
-    'commute': None,
-    'price': None, 
-    'district': None, 
-    'housing': None, 
-    'beds': None, 
-    'baths': None, 
-    'pets': None, 
-    'in_unit_laundry': None, 
-    'in_building_laundry': None, 
-    'sq_ft': None, 
-    'last_updated': None, 
-    'link': None
-}
+COMMUTES_DB_COLUMNS = [
+    'origin',
+    'destination',
+    'mode',
+    'commute'
+]
+LISTINGS_COMMUTES_JOIN_COLUMNS = [
+    'listings.address',
+    'commutes.destination',
+    'commutes.commute',
+    'commutes.mode',
+    'listings.price',
+    'listings.district',
+    'listings.housing',
+    'listings.beds',
+    'listings.baths',
+    'listings.pets',
+    'listings.in_unit_laundry',
+    'listings.in_building_laundry',
+    'listings.sq_ft',
+    'listings.last_updated',
+    'listings.link',
+]
 
 # DB QUERIES
-CREATE_TABLES_QUERY = """CREATE TABLE IF NOT EXISTS listings (
+CREATE_LISTINGS_TABLE_QUERY = """CREATE TABLE IF NOT EXISTS {} (
     address text PRIMARY KEY, 
-    commute text,
     price text, 
     district text, 
     housing text , 
@@ -51,57 +58,72 @@ CREATE_TABLES_QUERY = """CREATE TABLE IF NOT EXISTS listings (
     sq_ft text, 
     last_updated text, 
     link text
-)"""
-INSERT_MANY_LISTINGS_QUERY = "INSERT INTO {} VALUES({}) ON CONFLICT(address) DO UPDATE SET last_updated=excluded.last_updated".format(
-    LISTINGS_DB, ','.join(['?' for i in range(len(LISTINGS_DB_COLUMNS))]))
-SELECT_ALL_LISTINGS_QUERY = "SELECT * FROM {}".format(LISTINGS_DB)
+)""".format(LISTINGS_DB)
+CREATE_COMMUTES_TABLE_QUERY = """CREATE TABLE IF NOT EXISTS {} (
+    origin text,
+    destination text,
+    mode text,
+    commute text
+)""".format(COMMUTES_DB)
 
 def get_listings_with_address_query(address):
     return "SELECT address FROM {} WHERE address = '{}'".format(LISTINGS_DB, address)
-def get_commute_with_address_query(address):
-    return "SELECT commute FROM {} WHERE address = '{}'".format(LISTINGS_DB, address)
 
-# Take a list of listings and return a list of dicts of listings mapping DB columns to values
-# TODO: Have listings already as dicts in web?
-def map_listings_to_dicts(listings):
-    listing_dicts = []
+def get_commute_with_origin_query(origin):
     filters = get_filters()
-    for listing in listings:
-        listing_dict = LISTING_DICT.copy()
-        listing_dict['link'] = listing[0]
-        listing_dict['housing'] = listing[1]
-        listing_dict['district'] = listing[2]
-        listing_dict['address'] = listing[3]
-        listing_dict['commute'] = listing[4]
-        listing_dict['price'] = listing[5]
-        listing_dict['beds'] = listing[6]
-        listing_dict['baths'] = listing[7]
-        listing_dict['sq_ft'] = listing[8]
-        listing_dict['last_updated'] = str(date.today())
-        listing_dict['pets'] = 'yes' if is_valid_filter(filters['pets']) else None
-        listing_dict['in_unit_laundry'] = 'yes' if is_valid_filter(filters['laundry']['in_unit']) else None
-        listing_dict['in_building_laundry'] = 'yes' if is_valid_filter(filters['laundry']['in_building']) else None
-        listing_dicts.append(listing_dict)
-    return listing_dicts
+    dest = filters['commute']['address']
+    mode = filters['commute']['mode_transportation']
+    return "SELECT commute FROM {} WHERE origin = '{}' and destination = '{}' and mode = '{}'".format(
+        COMMUTES_DB, origin, dest, mode
+    )
 
-# Take a list of dicts of listings, return list of tuples of listings that can be directly inserted into DB
-def listings_dicts_to_tuples(listings):
-    listings_tuples = []
-    for listing in listings:
-        listings_tuples.append((
-           listing['address'],
-           listing['commute'],
-           listing['price'],
-           listing['district'],
-           listing['housing'],
-           listing['beds'],
-           listing['baths'],
-           listing['pets'],
-           listing['in_unit_laundry'],
-           listing['in_building_laundry'],
-           listing['sq_ft'],
-           listing['last_updated'],
-           listing['link']
-        ))
-    return listings_tuples
+def get_all_listings_with_filters_query():
+    filters = get_filters()
+    return "SELECT {} FROM {} INNER JOIN {} ON {}.address = {}.origin \
+            WHERE {}.destination = '{}' AND {}.mode = '{}'".format(
+        ",".join(LISTINGS_COMMUTES_JOIN_COLUMNS),
+        LISTINGS_DB,
+        COMMUTES_DB,
+        LISTINGS_DB,
+        COMMUTES_DB,
+        COMMUTES_DB,
+        filters['commute']['address'],
+        COMMUTES_DB,
+        filters['commute']['mode_transportation']
+    )
 
+def insert_one_listing_query():
+    return "INSERT INTO {} VALUES({})".format(
+        LISTINGS_DB,
+        ",".join(["?" for i in range(len(LISTINGS_DB_COLUMNS))]))
+
+def insert_one_commute_query():
+    return "INSERT INTO {} VALUES ({})".format(
+        COMMUTES_DB,
+        ",".join(["?" for i in range(len(COMMUTES_DB_COLUMNS))]))
+
+def create_listings_tuple(listing):
+    filters = get_filters()
+    return (
+        listing['address'],
+        listing['price'],
+        listing['district'],
+        listing['housing'],
+        listing['beds'],
+        listing['baths'],
+        'yes' if is_valid_filter(filters['pets']) else None,
+        'yes' if is_valid_filter(filters['laundry']['in_unit']) else None,
+        'yes' if is_valid_filter(filters['laundry']['in_building']) else None,
+        listing['sq_ft'],
+        str(date.today()),
+        listing['link']
+    )
+
+def create_commutes_tuple(listing):
+    filters = get_filters()
+    return (
+        listing['address'],
+        filters['commute']['address'],
+        filters['commute']['mode_transportation'],
+        listing['commute']
+    )

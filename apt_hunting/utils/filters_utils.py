@@ -44,3 +44,11 @@ def validate_beds(min_beds, max_beds):
 def get_commute_limit():
     filters = get_filters()
     return int(filters['commute']['time_limit'])
+
+def get_mode():
+    filters = get_filters()
+    return filters['commute']['mode_transportation']
+
+def get_dest():
+    filters = get_filters()
+    return filters['commute']['address']
